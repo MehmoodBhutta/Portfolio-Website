@@ -105,7 +105,11 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 }
 .hero-in{position:relative;max-width:var(--max);margin:0 auto;padding:88px 24px 96px;min-height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center}
 .hero h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:650;letter-spacing:-.032em;line-height:1.1;max-width:20ch}
-.hero h1 .hl{color:var(--accent)}
+.hero h1 .hl{color:var(--accent);position:relative}
+/* animated accent underline draws under the highlighted words */
+.hero h1 .hl::after{content:"";position:absolute;left:0;bottom:-2px;height:2px;width:100%;background:var(--accent);opacity:.5;transform:scaleX(0);transform-origin:left;animation:hlDraw 1s 1.3s var(--ease-out) forwards}
+@keyframes hlDraw{to{transform:scaleX(1)}}
+@media (prefers-reduced-motion: reduce){.hero h1 .hl::after{animation:none;transform:scaleX(1)}}
 .hero p{margin-top:22px;font-size:16.5px;color:var(--muted);max-width:50ch}
 .hero-actions{margin-top:36px;display:flex;gap:14px;flex-wrap:wrap}
 .btn{font-family:var(--mono);font-size:14px;padding:13px 26px;border-radius:6px;display:inline-flex;align-items:center;gap:8px;transition:transform .18s var(--ease-out),background .2s,box-shadow .25s;cursor:pointer}
@@ -156,8 +160,10 @@ section{padding:104px 0}
 /* ---------- projects ---------- */
 #projects{background:var(--bg2);border-bottom:1px solid var(--border)}
 .proj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
-.proj{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:30px;display:flex;flex-direction:column;transition:border-color .3s var(--ease-out),transform .45s var(--ease-out),box-shadow .45s var(--ease-out);will-change:transform}
-.proj:hover{border-color:var(--accent);transform:translateY(-5px);box-shadow:0 20px 48px rgba(0,0,0,.45)}
+.proj{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:30px;display:flex;flex-direction:column;transition:border-color .3s var(--ease-out),box-shadow .45s var(--ease-out);will-change:transform;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--ty,0px))}
+.proj:hover{border-color:var(--accent);--ty:-5px;box-shadow:0 20px 48px rgba(0,0,0,.45)}
+/* 3D tilt tracks the cursor; glow spot already follows via ::before */
+.proj:not(:hover){transition:transform .7s var(--ease-out),border-color .3s var(--ease-out),box-shadow .45s var(--ease-out)}
 .proj-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .proj h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
 .proj .lang{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
@@ -196,14 +202,21 @@ section{padding:104px 0}
 #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:100;transition:width .1s linear}
 @media (prefers-reduced-motion: reduce){#progress{transition:none}}
 
-/* ---------- hero entrance ---------- */
-.hero-load{opacity:0;transform:translateY(26px);animation:heroIn .8s cubic-bezier(.16,1,.3,1) forwards}
+/* ---------- hero entrance: per-word mask reveal ---------- */
+.hero-load{animation:heroIn .8s var(--ease-out) forwards}
 .hero-load-2{animation-delay:.12s}
 .hero-load-3{animation-delay:.24s}
 .hero-load-4{animation-delay:.36s}
 @keyframes heroIn{to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.hero-load{opacity:1;transform:none;animation:none}}
-.hero-term{animation:heroIn 1s .5s cubic-bezier(.16,1,.3,1) both}
+.hero-term{animation:heroIn 1s .5s var(--ease-out) both}
+/* word-rise: each word slides up out of its own clip box, staggered */
+.word-rise .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
+.word-rise .w>span{display:inline-block;transform:translateY(110%);animation:wordUp .9s var(--ease-out) forwards;animation-delay:calc(var(--wi) * 38ms + .15s)}
+@keyframes wordUp{to{transform:none}}
+@media (prefers-reduced-motion: reduce){.word-rise .w>span{transform:none;animation:none}}
+/* hero scroll parallax: content drifts up and fades as you scroll past */
+#heroInner{will-change:transform,opacity}
 
 /* ---------- staggered reveals ---------- */
 .reveal{opacity:0;transform:translateY(26px) scale(.995);transition:opacity .7s var(--ease-out),transform .7s var(--ease-out)}
@@ -255,7 +268,11 @@ section{padding:104px 0}
 .stat-label{font-size:13px;color:var(--muted);margin-top:6px;display:block}
 @media (max-width:767px){.stats-row{grid-template-columns:repeat(2,1fr);gap:32px 16px}}
 
-/* ---------- link underline draws + process line ---------- */
+/* magnetic pull: buttons translate toward the cursor (JS sets --mx/--my) */
+.btn{transform:translate(var(--mx,0px),var(--my,0px))}
+.btn:active{transform:translate(var(--mx,0px),calc(var(--my,0px) + 1px)) scale(.98)}
+/* kicker scramble: mono chars decode in when the section reveals */
+.kicker{min-height:1em}
 .proj-link{position:relative;display:inline-block}
 .proj-link::after{content:"";position:absolute;left:0;bottom:-3px;width:100%;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.16,1,.3,1)}
 .proj:hover .proj-link::after{transform:scaleX(1)}
@@ -321,7 +338,7 @@ footer{border-top:1px solid var(--border);padding:32px 0}
   </svg>
   <div class="grid-sweep" aria-hidden="true"></div>
   <div class="grid-sweep s2" aria-hidden="true"></div>
-  <div class="hero-in">
+  <div class="hero-in" id="heroInner">
     <h1 class="hero-load"><span class="hl">Production n8n &amp; Python</span> automation for teams that need reliability, not demos.</h1>
     <p class="hero-load hero-load-2">We build and maintain workflow automation, LLM pipelines and data infrastructure that keep running after launch. Solo engineer, agency-grade standards.</p>
     <div class="hero-actions hero-load hero-load-3">
@@ -640,6 +657,50 @@ document.addEventListener('scroll', () => {
 }, { passive: true });
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// ---- hero headline: split into words for the staggered mask reveal ----
+(function splitHeroWords() {
+  const h1 = document.querySelector('.hero h1');
+  if (!h1 || reduceMotion) return;
+  const nodes = [...h1.childNodes];
+  h1.classList.add('word-rise');
+  let wi = 0;
+  h1.innerHTML = '';
+  nodes.forEach(node => {
+    const isHl = node.nodeType === 1 && node.classList.contains('hl');
+    const text = node.textContent;
+    text.split(/\s+/).filter(Boolean).forEach(word => {
+      const w = document.createElement('span');
+      w.className = 'w';
+      const inner = document.createElement('span');
+      inner.style.setProperty('--wi', wi++);
+      if (isHl) { const hl = document.createElement('span'); hl.className = 'hl'; hl.textContent = word; inner.appendChild(hl); }
+      else inner.textContent = word;
+      w.appendChild(inner);
+      h1.appendChild(w);
+      h1.appendChild(document.createTextNode(' '));
+    });
+  });
+})();
+
+// ---- hero scroll parallax: content drifts up + fades (rAF, transform only) ----
+(function heroParallax() {
+  if (reduceMotion) return;
+  const inner = document.getElementById('heroInner');
+  if (!inner) return;
+  function step() {
+    ticking = false;
+    const y = window.scrollY;
+    const vh = window.innerHeight;
+    const p = Math.min(y / (vh * .9), 1);
+    inner.style.transform = `translateY(${y * .18}px)`;
+    inner.style.opacity = String(1 - p * .9);
+    updateBar();
+  }
+  document.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(step); ticking = true; }
+  }, { passive: true });
+})();
+
 // Hero background: particle network (drifting nodes + connecting lines)
 // delta-time based so speed is identical on 60Hz and 120Hz+ displays
 (function initParticles() {
@@ -781,16 +842,66 @@ const chipsIO = new IntersectionObserver((entries) => {
 }, { threshold: 0.25 });
 chipsIO.observe(stackSection);
 
-// Card spotlight: highlight follows cursor on project cards
+// Card spotlight + 3D tilt: highlight follows cursor, card leans toward it
 if (!reduceMotion && window.matchMedia('(hover:hover)').matches) {
   document.querySelectorAll('.proj').forEach(card => {
     card.addEventListener('pointermove', (e) => {
       const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
       card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
       card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      // max 4deg lean: subtle, never seasick
+      card.style.setProperty('--ry', ((px - .5) * 8).toFixed(2) + 'deg');
+      card.style.setProperty('--rx', ((.5 - py) * 8).toFixed(2) + 'deg');
+    });
+    card.addEventListener('pointerleave', () => {
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ry', '0deg');
+      card.style.setProperty('--ty', '0px');
+    });
+  });
+
+  // magnetic buttons: CTA translates a few px toward the cursor
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('pointermove', (e) => {
+      const r = btn.getBoundingClientRect();
+      btn.style.setProperty('--mx', ((e.clientX - r.left - r.width / 2) * .18).toFixed(1) + 'px');
+      btn.style.setProperty('--my', ((e.clientY - r.top - r.height / 2) * .3).toFixed(1) + 'px');
+    });
+    btn.addEventListener('pointerleave', () => {
+      btn.style.setProperty('--mx', '0px');
+      btn.style.setProperty('--my', '0px');
     });
   });
 }
+
+// Kicker scramble: section labels decode from mono noise to real text on reveal
+(function kickerScramble() {
+  if (reduceMotion) return;
+  const CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789$#_>';
+  document.querySelectorAll('.kicker').forEach(k => {
+    const final = k.textContent;
+    k.textContent = '';
+    let frame = 0, revealed = 0;
+    const totalFrames = 26;
+    function step() {
+      frame++;
+      revealed = Math.floor((frame / totalFrames) * final.length);
+      let out = final.slice(0, revealed);
+      for (let i = revealed; i < final.length; i++) {
+        out += final[i] === ' ' ? ' ' : CHARS[(Math.random() * CHARS.length) | 0];
+      }
+      k.textContent = out;
+      if (revealed < final.length) requestAnimationFrame(step);
+      else k.textContent = final;
+    }
+    // start when the section scrolls into view
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { io.disconnect(); requestAnimationFrame(step); }
+    }, { threshold: .5 });
+    io.observe(k);
+  });
+})();
 
 // Process connector line draws across when section enters
 const procGrid = document.querySelector('.proc-grid');
