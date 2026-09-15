@@ -48,6 +48,9 @@
   --mono:'SF Mono','Cascadia Code',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
   --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --max:1120px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --spring:cubic-bezier(.34,1.4,.64,1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -63,7 +66,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 .logo{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
 .logo em{color:var(--accent);font-style:normal;font-weight:500}
 .logo-mark{flex-shrink:0}
-.logo-trace{stroke-dasharray:26;stroke-dashoffset:0;animation:trace 3.2s ease-in-out infinite}
+.logo-trace{stroke-dasharray:26;stroke-dashoffset:0;animation:trace 3.2s var(--ease-out) infinite}
 @keyframes trace{0%,55%{stroke-dashoffset:0}75%,100%{stroke-dashoffset:52}}
 @media (prefers-reduced-motion: reduce){.logo-trace{animation:none}}
 .nav-links{display:none}
@@ -80,21 +83,21 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
   mask-image:radial-gradient(ellipse 80% 60% at 30% 20%,#000 30%,transparent 75%);
   -webkit-mask-image:radial-gradient(ellipse 80% 60% at 30% 20%,#000 30%,transparent 75%)}
 /* aurora blobs: slow drifting accent-color gradients behind the hero */
-.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3;pointer-events:none;will-change:transform}
-.blob-1{width:420px;height:420px;background:radial-gradient(circle,rgba(43,213,118,.12),transparent 70%);top:-140px;left:-100px;animation:drift1 34s ease-in-out infinite alternate}
-.blob-2{width:380px;height:380px;background:radial-gradient(circle,rgba(43,108,176,.08),transparent 70%);bottom:-160px;right:6%;animation:drift2 42s ease-in-out infinite alternate}
-.blob-3{width:260px;height:260px;background:radial-gradient(circle,rgba(43,213,118,.09),transparent 70%);top:30%;right:28%;animation:drift3 30s ease-in-out infinite alternate}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3;pointer-events:none;will-change:transform;transform:translateZ(0)}
+.blob-1{width:420px;height:420px;background:radial-gradient(circle,rgba(43,213,118,.12),transparent 70%);top:-140px;left:-100px;animation:drift1 34s linear infinite alternate}
+.blob-2{width:380px;height:380px;background:radial-gradient(circle,rgba(43,108,176,.08),transparent 70%);bottom:-160px;right:6%;animation:drift2 42s linear infinite alternate}
+.blob-3{width:260px;height:260px;background:radial-gradient(circle,rgba(43,213,118,.09),transparent 70%);top:30%;right:28%;animation:drift3 30s linear infinite alternate}
 @keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(90px,70px) scale(1.12)}}
 @keyframes drift2{from{transform:translate(0,0) scale(1)}to{transform:translate(-80px,-60px) scale(1.08)}}
 @keyframes drift3{from{transform:translate(0,0)}to{transform:translate(-60px,80px)}}
 /* floating particles canvas over the whole hero */
 #particles{position:absolute;inset:0;pointer-events:none}
-/* grid line that sweeps across the hero */
-.grid-sweep{position:absolute;top:0;bottom:0;width:1px;pointer-events:none;
+/* grid line that sweeps across the hero (transform-based: stays on GPU, no layout thrash) */
+.grid-sweep{position:absolute;top:0;bottom:0;left:0;width:1px;pointer-events:none;
   background:linear-gradient(180deg,transparent,var(--accent),transparent);opacity:.18;
   animation:sweep 14s linear infinite}
 .grid-sweep.s2{animation-delay:7s;opacity:.1}
-@keyframes sweep{from{left:-2%}to{left:102%}}
+@keyframes sweep{from{transform:translateX(calc(-2vw - 1px))}to{transform:translateX(104vw)}}
 @media (prefers-reduced-motion: reduce){
   .blob,.grid-sweep{animation:none}
   .blob{opacity:.35}
@@ -105,12 +108,12 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 .hero h1 .hl{color:var(--accent)}
 .hero p{margin-top:22px;font-size:16.5px;color:var(--muted);max-width:50ch}
 .hero-actions{margin-top:36px;display:flex;gap:14px;flex-wrap:wrap}
-.btn{font-family:var(--mono);font-size:14px;padding:13px 26px;border-radius:6px;display:inline-flex;align-items:center;gap:8px;transition:transform .15s,background .2s;cursor:pointer}
+.btn{font-family:var(--mono);font-size:14px;padding:13px 26px;border-radius:6px;display:inline-flex;align-items:center;gap:8px;transition:transform .18s var(--ease-out),background .2s,box-shadow .25s;cursor:pointer}
 .btn:active{transform:translateY(1px) scale(.98)}
 .btn-primary{background:var(--accent);color:#ffffff;font-weight:600}
-.btn-primary:hover{background:#0b8a4a}
-.btn-ghost{border:1px solid var(--border);color:var(--text)}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary:hover{background:#0b8a4a;box-shadow:0 6px 24px rgba(43,213,118,.25)}
+.btn-ghost{border:1px solid var(--border);color:var(--text);transition:transform .18s var(--ease-out),border-color .2s,color .2s,background .2s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 /* terminal accent card */
 .hero-term{position:absolute;right:24px;top:18%;transform:translateY(0);width:340px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-family:var(--mono);font-size:12.5px;box-shadow:0 24px 60px rgba(0,0,0,.45);z-index:2}
 .term-bar{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
@@ -153,8 +156,8 @@ section{padding:104px 0}
 /* ---------- projects ---------- */
 #projects{background:var(--bg2);border-bottom:1px solid var(--border)}
 .proj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
-.proj{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:30px;display:flex;flex-direction:column;transition:border-color .25s,transform .25s,box-shadow .25s}
-.proj:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.proj{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:30px;display:flex;flex-direction:column;transition:border-color .3s var(--ease-out),transform .45s var(--ease-out),box-shadow .45s var(--ease-out);will-change:transform}
+.proj:hover{border-color:var(--accent);transform:translateY(-5px);box-shadow:0 20px 48px rgba(0,0,0,.45)}
 .proj-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .proj h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
 .proj .lang{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
@@ -203,20 +206,20 @@ section{padding:104px 0}
 .hero-term{animation:heroIn 1s .5s cubic-bezier(.16,1,.3,1) both}
 
 /* ---------- staggered reveals ---------- */
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+.reveal{opacity:0;transform:translateY(26px) scale(.995);transition:opacity .7s var(--ease-out),transform .7s var(--ease-out)}
 .reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none}}
 
 /* ---------- stack ---------- */
 #stack{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .stack-groups{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
-.stack-group{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:26px 28px;transition:border-color .25s,transform .25s,box-shadow .25s}
-.stack-group:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.stack-group{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:26px 28px;transition:border-color .3s var(--ease-out),transform .45s var(--ease-out),box-shadow .45s var(--ease-out)}
+.stack-group:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 16px 38px rgba(0,0,0,.42)}
 .stack-group h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:16px}
 .stack-chips{display:flex;flex-wrap:wrap;gap:10px}
 .stack-item{font-family:var(--mono);font-size:13.5px;padding:9px 16px;border:1px solid var(--border);border-radius:999px;color:var(--muted);background:var(--bg);opacity:0;transform:scale(.85);transition:color .2s,border-color .2s,background .2s;transition-delay:0s}
 .stack-group:hover .stack-item{border-color:var(--accent);color:var(--text)}
-.stack-item.pop{opacity:1;transform:scale(1);transition:opacity .45s cubic-bezier(.34,1.56,.64,1),transform .45s cubic-bezier(.34,1.56,.64,1),color .2s,border-color .2s,background .2s}
+.stack-item.pop{opacity:1;transform:scale(1);transition:opacity .5s var(--ease-out),transform .6s var(--spring),color .2s,border-color .2s,background .2s}
 .stack-item:hover{color:var(--accent)!important;border-color:var(--accent)!important;background:var(--accent-dim)}
 @media (max-width:767px){.stack-groups{grid-template-columns:1fr}}
 .contact-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:start}
@@ -238,8 +241,8 @@ section{padding:104px 0}
 /* ---------- process ---------- */
 .process{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .proc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.proc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 22px;transition:border-color .25s,transform .25s}
-.proc:hover{border-color:var(--accent);transform:translateY(-3px)}
+.proc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px 22px;transition:border-color .3s var(--ease-out),transform .45s var(--ease-out),box-shadow .45s var(--ease-out)}
+.proc:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 14px 32px rgba(0,0,0,.4)}
 .proc-label{font-family:var(--mono);font-size:12.5px;color:var(--accent);font-weight:600;display:inline-block;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent-dim)}
 .proc p{font-size:13.5px;color:var(--muted);line-height:1.6}
 @media (max-width:1023px){.proc-grid{grid-template-columns:repeat(2,1fr)}}
@@ -272,7 +275,7 @@ footer{border-top:1px solid var(--border);padding:32px 0}
 .foot-in a:hover{color:var(--accent)}
 
 /* reveal on scroll */
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+.reveal{opacity:0;transform:translateY(26px) scale(.995);transition:opacity .7s var(--ease-out),transform .7s var(--ease-out)}
 .reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none}}
 </style>
@@ -638,12 +641,13 @@ document.addEventListener('scroll', () => {
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Hero background: particle network (drifting nodes + connecting lines)
+// delta-time based so speed is identical on 60Hz and 120Hz+ displays
 (function initParticles() {
   const canvas = document.getElementById('particles');
   if (!canvas || reduceMotion) return;
   const ctx = canvas.getContext('2d');
   const hero = canvas.parentElement;
-  let w, h, nodes = [], rafId = null, running = true;
+  let w, h, nodes = [], rafId = null, running = true, lastT = 0;
   const COUNT = window.innerWidth < 768 ? 16 : 30;
   const LINK_DIST = 120;
 
@@ -658,8 +662,11 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
       r: 1.2 + Math.random() * 1.8
     }));
   }
-  function draw() {
+  function draw(t) {
     if (!running) return;
+    // normalized step: 1.0 at 60fps, <1 on faster screens -> constant perceived speed
+    const dt = lastT ? Math.min((t - lastT) / 16.667, 2.5) : 1;
+    lastT = t;
     ctx.clearRect(0, 0, w, h);
     // lines
     for (let i = 0; i < nodes.length; i++) {
@@ -682,7 +689,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
       ctx.fill();
-      n.x += n.vx; n.y += n.vy;
+      n.x += n.vx * dt; n.y += n.vy * dt;
       if (n.x < 0 || n.x > w) n.vx *= -1;
       if (n.y < 0 || n.y > h) n.vy *= -1;
     }
@@ -691,12 +698,16 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
   // pause when hero is off-screen (IntersectionObserver, no scroll listeners)
   const vis = new IntersectionObserver(([e]) => {
     running = e.isIntersecting;
-    if (running) { resize(); draw(); }
+    if (running) { lastT = 0; resize(); rafId = requestAnimationFrame(draw); }
     else if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   }, { threshold: 0 });
   vis.observe(hero);
-  window.addEventListener('resize', () => { resize(); seed(); });
-  resize(); seed(); draw();
+  let resizeRaf = null;
+  window.addEventListener('resize', () => {
+    if (resizeRaf) cancelAnimationFrame(resizeRaf);
+    resizeRaf = requestAnimationFrame(() => { resize(); seed(); });
+  });
+  resize(); seed(); rafId = requestAnimationFrame(draw);
 })();
 
 // Hero terminal: types commands, then prints results (skipped under reduced motion)
@@ -726,9 +737,12 @@ if (reduceMotion) {
     const before = m ? m[1] : '', key = m ? m[2] : '', after = m ? m[3] : '';
     let i = 0;
     function tick() {
-      if (i < before.length) { kEl.textContent += before[i++]; setTimeout(tick, 28); }
-      else if (i - before.length < key.length) { kEl.textContent += key[i++ - before.length]; setTimeout(tick, 60); }
-      else if (i - before.length - key.length < after.length) { tEl.textContent += after[i++ - before.length - key.length]; setTimeout(tick, 28); }
+      // typing rhythm: ease-out cadence, chars land slightly faster over time
+      const step = i < before.length ? 30 : (i - before.length < key.length ? 55 : 26);
+      const delay = Math.max(step - Math.min(i * 1.2, 14), 8);
+      if (i < before.length) { kEl.textContent += before[i++]; setTimeout(tick, delay); }
+      else if (i - before.length < key.length) { kEl.textContent += key[i++ - before.length]; setTimeout(tick, delay); }
+      else if (i - before.length - key.length < after.length) { tEl.textContent += after[i++ - before.length - key.length]; setTimeout(tick, delay); }
       else setTimeout(() => {
         line.out.forEach(o => termBody.insertAdjacentHTML('beforeend', `<div>${o}</div>`));
         li++; setTimeout(typeLine, 420);
@@ -746,7 +760,7 @@ const io = new IntersectionObserver((entries) => {
     const el = e.target;
     const siblings = [...el.parentElement.children].filter(c => c.classList.contains('reveal'));
     const idx = Math.min(siblings.indexOf(el), 8);
-    el.style.transitionDelay = (idx * 80) + 'ms';
+    el.style.transitionDelay = (idx * 70) + 'ms';
     el.classList.add('in');
     io.unobserve(el);
   });
@@ -796,12 +810,14 @@ if (statsBand) {
     document.querySelectorAll('.stat-num').forEach(el => {
       const target = parseInt(el.dataset.count, 10);
       if (reduceMotion) { el.textContent = target; return; }
-      const dur = 1400, t0 = performance.now();
+      const dur = 1600, t0 = performance.now();
       (function frame(t) {
         const p = Math.min((t - t0) / dur, 1);
-        const eased = 1 - Math.pow(1 - p, 3);
+        // quintic ease-out: fast start, silky deceleration, zero snap at the end
+        const eased = 1 - Math.pow(1 - p, 5);
         el.textContent = Math.round(target * eased);
         if (p < 1) requestAnimationFrame(frame);
+        else el.textContent = target;
       })(t0);
     });
   }, { threshold: 0.4 });
