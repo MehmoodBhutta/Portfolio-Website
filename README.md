@@ -1,6 +1,6 @@
-# Relayhaus - Portfolio Website
+# Workflowry - Portfolio Website
 
-Single-file static portfolio for **Relayhaus** (Mehmood Bhutta): n8n, Python and LLM automation engineering.
+Single-file static portfolio for **Workflowry** (Mehmood Bhutta): n8n, Python and LLM automation engineering.
 
 ## Live site
 
@@ -34,5 +34,5 @@ Any static file server works. No build step, no dependencies.
 ## TODO before launch
 
 - [ ] Replace `https://www.upwork.com/` with the real Upwork profile URL (search for `upworkLink`)
-- [ ] Replace `hello@relayhaus.dev` if a different real inbox is wanted
+- [ ] Replace `hello@workflowry.com` if a different real inbox is wanted
 - [ ] Enable GitHub Pages (Settings > Pages > deploy from branch `main`, root)
