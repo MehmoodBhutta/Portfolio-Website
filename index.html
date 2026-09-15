@@ -5,6 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relayhaus - n8n, Python & LLM Automation Engineering</title>
 <meta name="description" content="Relayhaus builds production n8n workflow automation, Python pipelines and LLM integrations for teams that need reliability, not demos.">
+<meta name="theme-color" content="#0c100f">
+<link rel="canonical" href="https://mehmoodbhutta.github.io/Portfolio-Website/">
+<!-- Open Graph / Twitter: makes links shared on Upwork, Slack, LinkedIn render a real preview card -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Relayhaus">
+<meta property="og:title" content="Relayhaus - n8n, Python & LLM Automation Engineering">
+<meta property="og:description" content="Production n8n workflows, Python pipelines and LLM integrations. Open-source code, real repos, agency-grade standards.">
+<meta property="og:url" content="https://mehmoodbhutta.github.io/Portfolio-Website/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Relayhaus - n8n, Python & LLM Automation Engineering">
+<meta name="twitter:description" content="Production n8n workflows, Python pipelines and LLM integrations. Open-source code, real repos, agency-grade standards.">
+<!-- Favicon: inline SVG, no extra request -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='7' stroke='%232bd576' stroke-width='2'/%3E%3Ccircle cx='10' cy='16' r='3' fill='%232bd576'/%3E%3Ccircle cx='22' cy='10' r='3' fill='%232bd576' opacity='.45'/%3E%3Ccircle cx='22' cy='22' r='3' fill='%232bd576' opacity='.45'/%3E%3Cpath d='M13 16H19M19 10v6M19 16v6' stroke='%232bd576' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<!-- Structured data: helps search engines and AI assistants understand who this is -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Relayhaus",
+  "description": "n8n workflow automation, Python pipelines and LLM integration engineering.",
+  "url": "https://mehmoodbhutta.github.io/Portfolio-Website/",
+  "email": "hello@relayhaus.dev",
+  "founder": {
+    "@type": "Person",
+    "name": "Mehmood Bhutta",
+    "sameAs": ["https://github.com/MehmoodBhutta"]
+  },
+  "knowsAbout": ["n8n", "Workflow Automation", "Python", "LLM Integration", "Data Engineering"]
+}
+</script>
 <style>
 :root{
   --bg:#0c100f;
@@ -134,6 +164,9 @@ section{padding:104px 0}
 .proj .tags{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap}
 .tag{font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:999px;color:var(--muted)}
 .proj-link{margin-top:20px;font-family:var(--mono);font-size:13px;color:var(--accent)}
+.proj-meta{margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:14px}
+.proj-meta .live{color:var(--accent)}
+.proj-meta .dead{color:#ff7b6b}
 @media (max-width:767px){.proj-grid{grid-template-columns:1fr}}
 
 /* ---------- project card spotlight ---------- */
@@ -557,7 +590,7 @@ footer{border-top:1px solid var(--border);padding:32px 0}
       <h2>Have an automation that keeps breaking? That's the job.</h2>
       <p class="lead">Tell us what's manual, fragile or slow. We'll reply with an honest read on whether we're the right fit and what the build looks like.</p>
       <div class="contact-alt" style="margin-top:28px">
-        <a href="https://www.upwork.com/" target="_blank" rel="noopener"><span class="arrow">&rarr;</span> Hire us on Upwork</a>
+        <a href="https://www.upwork.com/" target="_blank" rel="noopener" id="upworkLink"><span class="arrow">&rarr;</span> Hire us on Upwork</a>
         <a href="https://github.com/MehmoodBhutta" target="_blank" rel="noopener"><span class="arrow">&rarr;</span> Personal GitHub</a>
         <a href="mailto:hello@relayhaus.dev"><span class="arrow">&rarr;</span> hello@relayhaus.dev</a>
       </div>
@@ -774,6 +807,32 @@ if (statsBand) {
   }, { threshold: 0.4 });
   statsIO.observe(statsBand);
 }
+
+// Live repo freshness: hit GitHub API once, mark each project card with last-push age
+(async function repoFreshness() {
+  const links = document.querySelectorAll('a.proj-link[href*="github.com"]');
+  const repos = [...new Set(links.map(a => a.href.replace(/https:\/\/github\.com\//, '').replace(/\/$/, '')))];
+  try {
+    for (const repo of repos) {
+      const r = await fetch(`https://api.github.com/repos/${repo}`, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const d = await r.json();
+      const pushed = d.pushed_at ? new Date(d.pushed_at) : null;
+      if (!pushed) continue;
+      const days = Math.floor((Date.now() - pushed) / 86400000);
+      const age = days === 0 ? 'pushed today' : days === 1 ? 'pushed 1d ago' : days < 45 ? `pushed ${days}d ago` : `pushed ${Math.floor(days / 30)}mo ago`;
+      document.querySelectorAll('a.proj-link').forEach(a => {
+        if (!a.href.includes(repo)) return;
+        const card = a.closest('.proj');
+        if (!card) return;
+        const meta = document.createElement('div');
+        meta.className = 'proj-meta';
+        meta.innerHTML = `<span class="live">● ${age}</span><span>${d.stargazers_count} star${d.stargazers_count === 1 ? '' : 's'}</span>`;
+        a.before(meta);
+      });
+    }
+  } catch (e) { /* offline or rate-limited: badges just stay hidden, cards look normal */ }
+})();
 
 // Contact form: validate + open prefilled mailto (no backend needed)
 const form = document.getElementById('contactForm');
