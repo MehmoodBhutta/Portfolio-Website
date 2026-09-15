@@ -78,11 +78,14 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 
 /* ---------- hero ---------- */
 .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+/* drifting grid: subtle background-position creep adds depth without stealing attention */
 .hero-grid-bg{position:absolute;inset:0;pointer-events:none;
   background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
   background-size:56px 56px;opacity:.35;
   mask-image:radial-gradient(ellipse 80% 60% at 30% 20%,#000 30%,transparent 75%);
-  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 30% 20%,#000 30%,transparent 75%)}
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 30% 20%,#000 30%,transparent 75%);
+  animation:gridDrift 14s linear infinite}
+@keyframes gridDrift{to{background-position:56px 56px}}
 /* aurora blobs: slow drifting accent-color gradients behind the hero */
 .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3;pointer-events:none;will-change:transform;transform:translateZ(0)}
 .blob-1{width:420px;height:420px;background:radial-gradient(circle,rgba(43,213,118,.12),transparent 70%);top:-140px;left:-100px;animation:drift1 34s linear infinite alternate}
@@ -101,9 +104,9 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 .grid-sweep.s2{animation-delay:7s;opacity:.1}
 @keyframes sweep{from{transform:translateX(calc(-2vw - 1px))}to{transform:translateX(104vw)}}
 @media (prefers-reduced-motion: reduce){
-  .blob,.grid-sweep{animation:none}
+  .blob,.grid-sweep,.hero-grid-bg,.dot::after,.term-pipe::after{animation:none}
   .blob{opacity:.35}
-  #particles{display:none}
+  #stars,#particles{display:none}
 }
 .hero-in{position:relative;max-width:var(--max);margin:0 auto;padding:88px 24px 96px;min-height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center}
 .hero h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:650;letter-spacing:-.032em;line-height:1.1;max-width:20ch}
@@ -117,7 +120,8 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 .btn{font-family:var(--mono);font-size:14px;padding:13px 26px;border-radius:6px;display:inline-flex;align-items:center;gap:8px;transition:transform .18s var(--ease-out),background .2s,box-shadow .25s;cursor:pointer}
 .btn:active{transform:translateY(1px) scale(.98)}
 .btn-primary{background:var(--accent);color:#ffffff;font-weight:600}
-.btn-primary:hover{background:#0b8a4a;box-shadow:0 6px 24px rgba(43,213,118,.25)}
+.btn-primary:hover{background:#0b8a4a;transform:translateY(-2px);box-shadow:0 0 0 1px var(--accent),0 0 18px rgba(43,213,118,.45)}
+.btn-primary:active{transform:translateY(0) scale(.98)}
 .btn-ghost{border:1px solid var(--border);color:var(--text);transition:transform .18s var(--ease-out),border-color .2s,color .2s,background .2s}
 .btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 /* terminal accent card */
@@ -129,8 +133,17 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 .term-body .c{color:var(--accent)}
 .term-body .k{color:#7fb8ff}
 .term-body .ok{color:var(--accent)}
+/* radar-ping status dot: halo scales out and fades, staggered per row */
+.dot{position:relative;display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:7px;vertical-align:1px;flex-shrink:0}
+.dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--accent);animation:halo 1.8s ease-out infinite;animation-delay:inherit}
+@keyframes halo{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+.term-out{display:flex;align-items:center}
 .cursor{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:-2px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
+/* flowing pipeline: travelling gradient along a thin line (the product, as a graphic) */
+.term-pipe{position:relative;height:2px;margin:14px 0 4px;overflow:hidden;border-radius:2px;background:var(--border)}
+.term-pipe::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--accent) 45%,#a5f3c6 55%,transparent);background-size:220% 100%;animation:pipeFlow 2.8s linear infinite}
+@keyframes pipeFlow{from{background-position:120% 0}to{background-position:-120% 0}}
 @media (prefers-reduced-motion: reduce){.cursor{animation:none}}
 
 @media (max-width:1023px){.hero-term{display:none}}
@@ -934,17 +947,19 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
   resize(); seed(); rafId = requestAnimationFrame(draw);
 })();
 
-// Hero terminal: types commands, then prints results (skipped under reduced motion)
+// Hero terminal: types commands, prints radar-pinged results + a flowing pipeline line
+const termBody = document.getElementById('termBody');
 const termLines = [
   { cmd: 'n8n workflow status --all', out: ['sentinel-catch&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">healthy</span>', 'sentinel-dedupe&nbsp;&nbsp;&nbsp;<span class="ok">healthy</span>', 'sentinel-digest&nbsp;&nbsp;&nbsp;<span class="ok">healthy</span>'] },
   { cmd: 'schema-guard validate resp.json', out: ['<span class="ok">ok</span> 34/34 checks passed'] }
 ];
-const termBody = document.getElementById('termBody');
 if (reduceMotion) {
-  termBody.innerHTML = termLines.map(l =>
+  // static render: dots without the ping loop, pipe without the flow
+  termBody.innerHTML = termLines.map((l, idx) =>
     `<div><span class="c">$</span> ${l.cmd.replace(/(status|validate)/, '<span class="k">$1</span>')}</div>` +
-    l.out.map(o => `<div>${o}</div>`).join('')
-  ).join('') + '<div><span class="c">$</span> <span class="cursor"></span></div>';
+    l.out.map(o => `<div class="term-out"><span class="dot" style="animation:none"></span><span>${o}</span></div>`).join('') +
+    (idx === 0 ? '<div class="term-pipe"></div>' : '')
+  ).join('') + '<div><span class="c">$</span> <span class="cursor" style="animation:none"></span></div>';
 } else {
   let li = 0;
   function typeLine() {
@@ -968,7 +983,17 @@ if (reduceMotion) {
       else if (i - before.length < key.length) { kEl.textContent += key[i++ - before.length]; setTimeout(tick, delay); }
       else if (i - before.length - key.length < after.length) { tEl.textContent += after[i++ - before.length - key.length]; setTimeout(tick, delay); }
       else setTimeout(() => {
-        line.out.forEach(o => termBody.insertAdjacentHTML('beforeend', `<div>${o}</div>`));
+        // status rows: radar-ping dot per row, staggered so pings don't fire in unison
+        line.out.forEach((o, j) => {
+          const div = document.createElement('div');
+          div.className = 'term-out';
+          div.innerHTML = `<span class="dot" style="animation-delay:${(j * .35)}s, ${(j * .35)}s"></span><span>${o}</span>`;
+          termBody.appendChild(div);
+        });
+        // flowing pipeline line between the two command outputs
+        if (li < termLines.length - 1) {
+          termBody.insertAdjacentHTML('beforeend', '<div class="term-pipe"></div>');
+        }
         li++; setTimeout(typeLine, 420);
       }, 300);
     }
