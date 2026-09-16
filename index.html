@@ -71,9 +71,21 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
 @keyframes trace{0%,55%{stroke-dashoffset:0}75%,100%{stroke-dashoffset:52}}
 @media (prefers-reduced-motion: reduce){.logo-trace{animation:none}}
 .nav-links{display:none}
-@media (min-width:768px){.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted)}}
+@media (min-width:768px){.nav-links{display:flex;gap:32px;font-size:14px;color:var(--muted);align-items:center;margin-left:auto}}
 .nav-links a:hover{color:var(--text)}
-.nav-cta{font-family:var(--mono);font-size:13px;padding:8px 16px;border:1px solid var(--accent);color:var(--accent);border-radius:6px;transition:background .2s}
+/* mobile nav: links stack in a right-anchored dropdown under 768px */
+.nav-toggle{display:none;flex-direction:column;gap:5px;background:none;border:0;padding:8px 4px;cursor:pointer}
+.nav-toggle span{display:block;width:20px;height:2px;background:var(--text);border-radius:2px;transition:transform .25s var(--ease-out),opacity .2s}
+@media (max-width:767px){
+  .nav-toggle{display:flex}
+  .nav-links{display:none;position:absolute;top:64px;right:0;left:0;background:rgba(12,16,15,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-direction:column;gap:0;padding:8px 24px 16px}
+  .nav-links.open{display:flex}
+  .nav-links a:not(.nav-cta){padding:14px 0;border-bottom:1px solid var(--border);font-size:15px}
+  .nav-links a.nav-cta{margin-top:14px;text-align:center;justify-content:center}
+}
+@media (min-width:768px){.nav-toggle{display:none!important}}
+
+.nav-cta{font-family:var(--mono);font-size:13px;padding:8px 16px;border:1px solid var(--accent);color:var(--accent);border-radius:6px;transition:background .2s;display:inline-flex;align-items:center}
 .nav-cta:hover{background:var(--accent-dim)}
 
 /* ---------- hero ---------- */
@@ -109,7 +121,8 @@ nav{position:sticky;top:0;z-index:50;background:rgba(12,16,15,.85);backdrop-filt
   #stars,#particles{display:none}
 }
 .hero-in{position:relative;max-width:var(--max);margin:0 auto;padding:88px 24px 96px;min-height:calc(100dvh - 64px);display:flex;flex-direction:column;justify-content:center}
-.hero h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:650;letter-spacing:-.032em;line-height:1.1;max-width:20ch}
+.hero h1{font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:650;letter-spacing:-.032em;line-height:1.1;max-width:20ch;padding-right:6px}
+@media (max-width:767px){.hero h1{font-size:2rem;max-width:none;padding-right:0}.hero p{font-size:15.5px;max-width:none}}
 .hero h1 .hl{color:var(--accent);position:relative}
 /* animated accent underline draws under the highlighted words */
 .hero h1 .hl::after{content:"";position:absolute;left:0;bottom:-2px;height:2px;width:100%;background:var(--accent);opacity:.5;transform:scaleX(0);transform-origin:left;animation:hlDraw 1s 1.3s var(--ease-out) forwards}
@@ -330,6 +343,7 @@ footer{border-top:1px solid var(--border);padding:32px 0}
 <div id="progress" aria-hidden="true"></div>
 
 <nav>
+  <div class="nav-in">
     <a class="logo" href="#top">
       <svg class="logo-mark" width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
         <rect x="1.5" y="1.5" width="29" height="29" rx="7" stroke="var(--accent)" stroke-width="2"/>
@@ -340,6 +354,7 @@ footer{border-top:1px solid var(--border);padding:32px 0}
       </svg>
       <span class="logo-word">Workflow<em>ry</em></span>
     </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
     <div class="nav-links">
       <a href="#projects">Projects</a>
       <a href="#case-study">Case Studies</a>
@@ -671,6 +686,23 @@ footer{border-top:1px solid var(--border);padding:32px 0}
 </footer>
 
 <script>
+// Mobile nav toggle: right-anchored dropdown, closes on link tap
+(function mobileNav() {
+  const btn = document.getElementById('navToggle');
+  const links = document.querySelector('.nav-links');
+  if (!btn || !links) return;
+  btn.addEventListener('click', () => {
+    const open = links.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.style.opacity = open ? '.5' : '1';
+  });
+  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    links.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.style.opacity = '1';
+  }));
+})();
+
 // Scroll progress bar (rAF-throttled, no layout thrash)
 const bar = document.getElementById('progress');
 let ticking = false;
